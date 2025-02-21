@@ -59,3 +59,8 @@ coverage/
 # DB json files
 db/company_info.json 
 db/target_info.json
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.ym
