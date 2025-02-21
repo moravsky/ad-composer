@@ -1,0 +1,7 @@
+node_modules
+npm-debug.log
+*.pyc
+__pycache__
+.git
+.env
+*.sqlite3

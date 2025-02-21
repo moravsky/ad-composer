@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ad Composer</title>
+    <link rel="stylesheet" href="{% static 'ad_composer/css/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="left-column">
+            <div class="url-section">
+                <h3>Landing Page URL</h3>
+                <input type="text" id="urlInput" placeholder="Enter URL">
+                <button onclick="loadUrl()">Load</button>
+            </div>
+
+            <div id="selectionInstruction" class="selection-instruction" style="display: none;">
+                Please select elements for customization
+            </div>
+
+            <div id="selectedElements" class="selected-section" style="display: none;">
+                <h3>Selected Elements</h3>
+                <div id="elementsList"></div>
+            </div>
+
+            <div class="targets-section">
+                <h3>Targets</h3>
+                <select id="targetsDropdown">
+                    <option value="">Select a Target</option>
+                </select>
+                <button onclick="customizeSelectedTarget()">Customize</button>
+            </div>
+        </div>
+        <div class="right-column">
+            <div id="contentFrame"></div>
+        </div>
+    </div>
+
+    <script src="{% static 'ad_composer/js/script.js' %}"></script>
+</body>
+</html>

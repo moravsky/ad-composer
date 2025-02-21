@@ -1,0 +1,61 @@
+# Python/Django
+web/venv/
+**/__pycache__/
+*.py[cod]
+*.so
+.Python
+*.sqlite3
+db.sqlite3
+.env
+.venv
+env/
+venv/
+myenv/
+.env/ 
+ENV/
+*.log
+
+# Node.js
+api/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.*
+!.env.example
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Django static and media
+web/static/
+web/media/
+web/staticfiles/
+
+# Node.js build output
+api/dist/
+api/build/
+.next/
+out/
+build/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# DB json files
+db/company_info.json 
+db/target_info.json

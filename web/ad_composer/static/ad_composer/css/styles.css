@@ -1,0 +1,75 @@
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.left-column {
+    width: 300px;
+    padding: 20px;
+    border-right: 1px solid #ccc;
+    background-color: #f4f4f4;
+}
+
+.right-column {
+    flex-grow: 1;
+    padding: 20px;
+    overflow: auto;
+}
+
+.url-section, .targets-section {
+    margin-top: 20px;
+}
+
+.url-section > *, .targets-section > * {
+    margin-bottom: 10px;
+}
+
+.selected-element {
+    outline: 2px solid blue;
+}
+
+.hover-highlight {
+    outline: 2px dashed red;
+}
+
+input, button, select {
+    margin: 5px 0;
+    padding: 5px;
+    width: 100%;
+}
+
+.selected-section, .targets-section {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.selection-instruction {
+    background-color: #f0f0f0;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+    font-style: italic;
+}
+
+.selected-item {
+    position: relative;
+    margin: 10px 0;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+
+.remove-icon {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+    color: red;
+    font-weight: bold;
+}
+
+.remove-icon:hover {
+    color: darkred;
+}
