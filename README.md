@@ -138,7 +138,7 @@ createdb tofudb
 
 2. Run initialization scripts:
 ```bash
-psql -d tofudb -f db/init.sql
+psql -d tofudb -f db/create-db.sql
 ```
 
 ## Environment Variables
