@@ -1,30 +1,28 @@
 # Ad Composer
 
-Ad Composer is a full-stack application for personalizing landing pages using AI. It consists of a Node.js API with OpenAI integration and a Django web interface.
+Ad Composer is a full-stack application for personalizing landing pages using AI. It uses Django with REST Framework for both the web interface and API, integrated with OpenAI.
 
 ## Demo
 ![Ad Composer Demo](assets/ad-composer.gif)
 
 ## System Architecture
 
-- **API**: Node.js backend with OpenAI integration
-- **Web Interface**: Django application
+- **Web & API**: Django application with DRF API endpoints and OpenAI integration
 - **Database**: PostgreSQL
 - **Development/Production**: Docker containerization
 
 ## Project Structure
 
 ```
-ad-composer/
-├── api/              # Node.js API
-│   ├── src/         # API source code
-│   └── package.json # Node.js dependencies
-├── web/             # Django web application
-│   ├── landing/     # Landing page management
-│   ├── templates/   # HTML templates
-│   └── manage.py   
-├── db/              # Database initialization scripts
-└── docker/          # Docker configuration files
+AD-COMPOSER/
+├── assets/           # Asset files
+├── db/               # Database files
+│   └── init/         # Database initialization
+├── web/              # Django web application
+    ├── ad_composer/  # Main Django app
+    ├── config/       # Django project configuration
+    ├── myenv/        # Virtual environment
+    └── staticfiles/  # Static files
 ```
 
 ## API Endpoints
@@ -53,10 +51,14 @@ ad-composer/
     }
     ```
 
+### Fetch URL
+- `GET /fetch-url/?url=https://example.com`
+  - Fetches a web page and returns its HTML content
+  - Response: HTML content of the requested page
+
 ## Prerequisites
 
 - Docker and Docker Compose
-- Node.js 18+ (for local development)
 - Python 3.9+ (for local development)
 - PostgreSQL 16+ (for local development)
 
@@ -79,53 +81,28 @@ cp .env.example .env
 docker-compose up --build
 ```
 
-The services will be available at:
-- API: http://localhost:8080
-- Web Interface: http://localhost:8000
+The application will be available at:
+- http://localhost:8000
 
 ## Local Development Setup
 
-### API Setup
-
-1. Navigate to API directory:
-```bash
-cd api
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-### Web Setup
-
-1. Navigate to web directory:
-```bash
-cd web
-```
-
-2. Create and activate virtual environment:
+1. Create and activate virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Run migrations:
+3. Run migrations:
 ```bash
 python manage.py migrate
 ```
 
-5. Start the development server:
+4. Start the development server:
 ```bash
 python manage.py runserver
 ```
@@ -146,24 +123,16 @@ psql -d tofudb -f db/create-db.sql
 
 ## Environment Variables
 
-### API Environment Variables
 ```
-NODE_ENV=production
-PORT=8080
 DB_USER=tofu_user
 DB_HOST=db
 DB_DATABASE=tofudb
 DB_PASSWORD=your_secure_password
 DB_PORT=5432
-OPENAI_API_KEY=your_openai_api_key
-```
-
-### Web Environment Variables
-```
-DATABASE_URL=postgresql://tofu_user:your_secure_password@db:5432/tofudb
-DJANGO_SETTINGS_MODULE=config.settings
-DJANGO_SECRET_KEY=your_secure_django_secret
+SECRET_KEY=your_secure_django_secret
+DEBUG=False
 ALLOWED_HOSTS=localhost,127.0.0.1
+OPENAI_API_KEY=your_openai_api_key
 ```
 
 ## Production Deployment

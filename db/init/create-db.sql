@@ -19,3 +19,5 @@ $do$;
 
 -- Grant privileges
 GRANT ALL PRIVILEGES ON DATABASE tofudb TO tofu_user;
+GRANT ALL PRIVILEGES ON SCHEMA public TO tofu_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO tofu_user;

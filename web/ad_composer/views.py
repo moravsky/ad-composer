@@ -1,11 +1,52 @@
+import logging
+from django.conf import settings
+from django.db import connection
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
-import requests
-from django.http import HttpResponse
-from django.views.decorators.http import require_GET
 from urllib.parse import urljoin, urlparse
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 import re
+import requests
+from .serializers import PersonalizationRequestSerializer, PersonalizationResponseSerializer
+import openai
 
-@require_GET
+logger = logging.getLogger(__name__)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_account_names(request):
+    """
+    GET endpoint to retrieve account names from the database.
+    Returns a list of account names.
+    """
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    key AS account_name
+                FROM 
+                    target_accounts, 
+                    jsonb_each(data)
+                WHERE 
+                    key != 'meta'
+            """)
+            
+            # Convert the query results to a list of account names
+            account_names = [row[0] for row in cursor.fetchall()]
+        
+        return Response(account_names)
+    
+    except Exception as e:
+        logger.error(f"Error retrieving account names: {e}")
+        return Response(
+            {"error": str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
 def fetch_url(request):
     url = request.GET.get('url')
     try:
@@ -43,3 +84,96 @@ def fetch_url(request):
     
 def index(request):
     return render(request, 'ad_composer/index.html')
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def personalize_content(request):
+    """
+    POST endpoint to personalize marketing content using OpenAI.
+    Requires 'client' and 'texts' in the request body.
+    """
+    # Validate request data using serializer
+    serializer = PersonalizationRequestSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Get validated data
+    client = serializer.validated_data['client']
+    texts = serializer.validated_data['texts']
+    
+    try:
+        # Construct personalization prompt
+        prompt = f"""
+            You are a marketing expert specializing in personalized content creation.
+            
+            Client: {client}
+            
+            Personalize the following texts to make them more appealing and relevant to {client}:
+            
+            {chr(10).join([f"Text {i + 1}: {text}" for i, text in enumerate(texts)])}
+            
+            Please return ONLY the personalized text for each input, without any additional explanation.
+
+            Don't add quotes unless original text contains quotes.
+        """
+        
+        # Call OpenAI API
+        client_openai = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+        completion = client_openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful marketing expert specializing in content personalization. Return only the personalized text."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            max_tokens=1000,
+            temperature=0.7
+        )
+        
+        # Get the full content
+        full_content = completion.choices[0].message.content
+        logger.debug(f'Full OpenAI Response: {full_content}')
+        
+        # Extract personalized texts
+        personalized_texts = []
+        for i in range(len(texts)):
+            lines = full_content.split('\n')
+            target_line = next((line for line in lines if line.startswith(f"Text {i + 1}:")), None)
+            
+            if target_line:
+                # Remove the "Text X:" prefix and trim
+                personalized_text = target_line.replace(f"Text {i + 1}:", '').strip()
+                logger.error(f"personalized_text: {personalized_text}")
+                personalized_texts.append(personalized_text)
+            else:
+                personalized_texts.append('')
+        
+        # Prepare and validate response using serializer
+        response_data = {
+            "client": client,
+            "originalTexts": texts,
+            "personalizedContent": personalized_texts
+        }
+        
+        response_serializer = PersonalizationResponseSerializer(data=response_data)
+        if response_serializer.is_valid():
+            return Response(response_serializer.validated_data)
+        else:
+            # This shouldn't normally happen, but just in case
+            logger.error(f"Response validation error: {response_serializer.errors}")
+            return JsonResponse(response_data, safe=False)
+        
+    except Exception as e:
+        logger.error(f"Personalization error: {e}")
+        return Response({
+            "error": "Failed to personalize content",
+            "details": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
