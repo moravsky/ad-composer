@@ -64,3 +64,6 @@ db/target_info.json
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.ym
+
+#Ollama
+ollama-data/*

@@ -1,6 +1,5 @@
 import logging
 from django.conf import settings
-from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from urllib.parse import urljoin, urlparse
@@ -10,6 +9,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 import re
 import requests
+from .models import Account, CompanyInfo
 from .serializers import PersonalizationRequestSerializer, PersonalizationResponseSerializer
 import openai
 
@@ -23,21 +23,9 @@ def get_account_names(request):
     Returns a list of account names.
     """
     try:
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT 
-                    key AS account_name
-                FROM 
-                    target_accounts, 
-                    jsonb_each(data)
-                WHERE 
-                    key != 'meta'
-            """)
-            
-            # Convert the query results to a list of account names
-            account_names = [row[0] for row in cursor.fetchall()]
-        
-        return Response(account_names)
+        # Use Django ORM instead of raw SQL
+        account_names = Account.objects.values_list('name', flat=True)
+        return Response(list(account_names))
     
     except Exception as e:
         logger.error(f"Error retrieving account names: {e}")
@@ -85,6 +73,33 @@ def fetch_url(request):
 def index(request):
     return render(request, 'ad_composer/index.html')
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_company_info(request):
+    """
+    GET endpoint to retrieve company information from the database.
+    """
+    try:
+        # Get the first company info record, since we only have one rn
+        company_info = CompanyInfo.objects.first()
+        
+        if not company_info:
+            return Response(
+                {"error": "No company information found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        from .serializers import CompanyInfoSerializer
+        serializer = CompanyInfoSerializer(company_info)
+        return Response(serializer.data)
+        
+    except Exception as e:
+        logger.error(f"Error retrieving company info: {e}")
+        return Response(
+            {"error": str(e)}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def personalize_content(request):
@@ -105,11 +120,16 @@ def personalize_content(request):
     texts = serializer.validated_data['texts']
     
     try:
+        # Try to get account details from database to enhance prompt
+        account = Account.objects.filter(name=client).first()
+        account_context = f"Account URL: {account.url}" if account else ""
+        
         # Construct personalization prompt
         prompt = f"""
             You are a marketing expert specializing in personalized content creation.
             
             Client: {client}
+            {account_context}
             
             Personalize the following texts to make them more appealing and relevant to {client}:
             

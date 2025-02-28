@@ -5,57 +5,65 @@ DROP TABLE IF EXISTS target_accounts CASCADE;
 DROP TABLE IF EXISTS target_industries CASCADE;
 DROP TABLE IF EXISTS healthcare_subverticals CASCADE;
 
--- Create tables with JSONB columns
+-- Create company_info table
 CREATE TABLE IF NOT EXISTS company_info (
     id SERIAL PRIMARY KEY,
-    data JSONB NOT NULL
+    company_name VARCHAR(255) NOT NULL,
+    company_website VARCHAR(255),
+    company_description TEXT,
+    official_overview TEXT,
+    product_overview TEXT,
+    differentiators TEXT,
+    ap_automation_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS target_personas (
+-- Create personas table
+CREATE TABLE IF NOT EXISTS personas (
     id SERIAL PRIMARY KEY,
-    data JSONB NOT NULL
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    url VARCHAR(2048),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS target_accounts (
+-- Create industries table
+CREATE TABLE IF NOT EXISTS industries (
     id SERIAL PRIMARY KEY,
-    data JSONB NOT NULL
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    url VARCHAR(2048),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS target_industries (
+-- Create accounts table
+CREATE TABLE IF NOT EXISTS accounts (
     id SERIAL PRIMARY KEY,
-    data JSONB NOT NULL
+    name VARCHAR(255) NOT NULL,
+    url VARCHAR(2048),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Create account_industries junction table (many-to-many)
+CREATE TABLE IF NOT EXISTS account_industries (
+    account_id INTEGER REFERENCES accounts(id),
+    industry_id INTEGER REFERENCES industries(id),
+    PRIMARY KEY (account_id, industry_id)
+);
+
+-- Create healthcare_subverticals table
 CREATE TABLE IF NOT EXISTS healthcare_subverticals (
     id SERIAL PRIMARY KEY,
-    data JSONB NOT NULL
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    url VARCHAR(2048),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-
--- Create GIN indexes for full JSON search
-CREATE INDEX idx_company_info_gin ON company_info USING GIN (data);
-CREATE INDEX idx_personas_gin ON target_personas USING GIN (data);
-CREATE INDEX idx_accounts_gin ON target_accounts USING GIN (data);
-CREATE INDEX idx_industries_gin ON target_industries USING GIN (data);
-CREATE INDEX idx_healthcare_gin ON healthcare_subverticals USING GIN (data);
-
--- Create indexes for specific JSON paths
-
--- Company Info indexes
-CREATE INDEX idx_company_name ON company_info ((data->'Company Name'->'data'->0->>'value'));
-CREATE INDEX idx_company_website ON company_info ((data->'Company Website'->'data'->0->>'value'));
-
--- Target Personas indexes - creates index for each persona's description and URL
-CREATE INDEX idx_personas_text ON target_personas ((data->>'Accounts Payable'));
-CREATE INDEX idx_personas_meta_position ON target_personas ((data->'meta'->>'position'));
-
--- Target Accounts indexes
-CREATE INDEX idx_accounts_meta_position ON target_accounts ((data->'meta'->>'position'));
-
--- Target Industries indexes
-CREATE INDEX idx_industries_meta_position ON target_industries ((data->'meta'->>'position'));
-
--- Healthcare Subverticals indexes
-CREATE INDEX idx_healthcare_meta_position ON healthcare_subverticals ((data->'meta'->>'position'));
 
 -- Example queries:
 /*
