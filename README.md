@@ -3,7 +3,11 @@
 Ad Composer is a full-stack application for personalizing landing pages using AI. It uses Django with REST Framework for both the web interface and API, integrated with OpenAI.
 
 ## Demo
-![Ad Composer Demo](assets/ad-composer.gif)
+### Generic Peronsalization
+![Generic Personalization](assets/ad-composer.gif)
+
+### Deep Personalization
+![Deep Personalization](assets/ad-composer.gif)
 
 ## System Architecture
 
