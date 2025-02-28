@@ -7,7 +7,7 @@ Ad Composer is a full-stack application for personalizing landing pages using AI
 ![Generic Personalization](assets/ad-composer.gif)
 
 ### Deep Personalization
-![Deep Personalization](assets/ad-composer.gif)
+![Deep Personalization](assets/deep_personalization.gif)
 
 ## System Architecture
 
