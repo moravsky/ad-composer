@@ -67,3 +67,6 @@ db/target_info.json
 
 #Ollama
 ollama-data/*
+
+# Temporal
+workflow/config/docker.yaml

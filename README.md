@@ -1,6 +1,6 @@
 # Ad Composer
 
-Ad Composer is a full-stack application for personalizing landing pages using AI. It uses Django with REST Framework for both the web interface and API, integrated with OpenAI.
+Ad Composer is a full-stack application for personalizing landing pages using AI. It uses Django with REST Framework for both the web interface and API, integrated with OpenAI and Temporal for workflow orchestration.
 
 ## Demo
 ### Generic Peronsalization
@@ -13,6 +13,7 @@ Ad Composer is a full-stack application for personalizing landing pages using AI
 
 - **Web & API**: Django application with DRF API endpoints and OpenAI integration
 - **Database**: PostgreSQL
+- **Workflow Engine**: Temporal for asynchronous workflow orchestration
 - **Development/Production**: Docker containerization
 
 ## Project Structure
@@ -65,7 +66,6 @@ AD-COMPOSER/
 - Docker and Docker Compose
 - Python 3.9+ (for local development)
 - PostgreSQL 16+ (for local development)
-
 ## Quick Start with Docker
 
 1. Clone the repository:
@@ -86,6 +86,13 @@ docker-compose up --build
 ```
 
 The application will be available at:
+- Web Application: http://localhost:8000
+- Temporal UI: http://localhost:8080
+
+4. Test Temporal connection:
+```bash
+docker exec -it ad-composer-web-1 python test_temporal.py
+```
 - http://localhost:8000
 
 ## Local Development Setup
@@ -128,15 +135,53 @@ psql -d tofudb -f db/create-db.sql
 ## Environment Variables
 
 ```
+# Database Configuration
 DB_USER=tofu_user
 DB_HOST=db
 DB_DATABASE=tofudb
 DB_PASSWORD=your_secure_password
 DB_PORT=5432
+
+# Django Configuration
 SECRET_KEY=your_secure_django_secret
 DEBUG=False
 ALLOWED_HOSTS=localhost,127.0.0.1
+
+# API Keys
 OPENAI_API_KEY=your_openai_api_key
+
+# Temporal Configuration
+TEMPORAL_HOST=temporal:7233
+```
+
+## Temporal Workflow Engine
+
+This application uses Temporal as a workflow engine to orchestrate asynchronous ad generation processes. Temporal provides:
+
+- Durable execution of workflows
+- Automatic retries and error handling
+- Scalable processing of multiple targets in parallel
+- Visibility and monitoring through the Temporal UI
+
+### Temporal UI
+
+The Temporal UI is available at http://localhost:8080 when running with Docker. Use it to:
+
+- Monitor workflow executions
+- View workflow history and details
+- Debug failed workflows
+- Manually trigger workflows
+
+### Testing Temporal Connection
+
+To verify that Temporal is properly connected:
+
+```bash
+# When running with Docker
+docker exec -it ad-composer-web-1 python test_temporal.py
+
+# When running locally
+python web/test_temporal.py
 ```
 
 ## Production Deployment

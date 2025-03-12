@@ -1,0 +1,6 @@
+frontend.enableClientVersionCheck:
+  - value: true
+    constraints: {}
+system.enableVisibilityToKafka:
+  - value: false
+    constraints: {}

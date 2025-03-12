@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: tofu_user
       POSTGRES_PASSWORD: your_secure_password
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U tofu_user -d tofudb"]
       interval: 10s
@@ -29,9 +29,50 @@ services:
       - web/.env
     environment:
       DB_HOST: db
+      TEMPORAL_HOST: temporal:7233
     ports:
-      - "8000:8000"
+      - "8001:8000"
     command: python manage.py runserver 0.0.0.0:8000
+
+  # Temporal services
+  temporal:
+    container_name: temporal
+    image: temporalio/auto-setup:1.22.4
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=tofu_user
+      - POSTGRES_PWD=your_secure_password
+      - POSTGRES_SEEDS=db
+      - POSTGRES_DB=temporaldb
+    ports:
+      - 7233:7233
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7233/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  temporal-admin-tools:
+    container_name: temporal-admin-tools
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    image: temporalio/admin-tools:1.22.4
+    stdin_open: true
+    tty: true
+
+  temporal-ui:
+    container_name: temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    image: temporalio/ui:2.21.3
+    ports:
+      - 8080:8080
 
 volumes:
   postgres_data:

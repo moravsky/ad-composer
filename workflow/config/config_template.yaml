@@ -1,0 +1,132 @@
+log:
+  stdout: true
+  level: "info"
+
+persistence:
+  defaultStore: default
+  visibilityStore: visibility
+  numHistoryShards: 4
+  datastores:
+    default:
+      sql:
+        pluginName: "postgres"
+        databaseName: "{{ default .Env.POSTGRES_DB "temporaldb" }}"
+        user: "{{ default .Env.POSTGRES_USER "tofu_user" }}"
+        password: "{{ default .Env.POSTGRES_PWD "your_secure_password" }}"
+        host: "{{ default .Env.POSTGRES_SEEDS "db" }}"
+        port: {{ default .Env.DB_PORT "5432" }}
+        maxConns: 20
+        maxIdleConns: 20
+        maxConnLifetime: "1h"
+    visibility:
+      sql:
+        pluginName: "postgres"
+        databaseName: "{{ default .Env.POSTGRES_DB "temporaldb" }}"
+        user: "{{ default .Env.POSTGRES_USER "tofu_user" }}"
+        password: "{{ default .Env.POSTGRES_PWD "your_secure_password" }}"
+        host: "{{ default .Env.POSTGRES_SEEDS "db" }}"
+        port: {{ default .Env.DB_PORT "5432" }}
+        maxConns: 10
+        maxIdleConns: 10
+        maxConnLifetime: "1h"
+
+global:
+  membership:
+    maxJoinDuration: "30s"
+    broadcastAddress: "{{ default .Env.TEMPORAL_BROADCAST_ADDRESS "127.0.0.1" }}"
+  pprof:
+    port: 7936
+
+services:
+  frontend:
+    rpc:
+      grpcPort: 7233
+      membershipPort: 6933
+      bindOnIP: "0.0.0.0"
+    metrics:
+      tags:
+        type: "frontend"
+      prometheus:
+        timerType: "histogram"
+        listenAddress: "0.0.0.0:8000"
+
+  history:
+    rpc:
+      grpcPort: 7234
+      membershipPort: 6934
+      bindOnIP: "0.0.0.0"
+    metrics:
+      tags:
+        type: "history"
+      prometheus:
+        timerType: "histogram"
+        listenAddress: "0.0.0.0:8001"
+
+  matching:
+    rpc:
+      grpcPort: 7235
+      membershipPort: 6935
+      bindOnIP: "0.0.0.0"
+    metrics:
+      tags:
+        type: "matching"
+      prometheus:
+        timerType: "histogram"
+        listenAddress: "0.0.0.0:8002"
+
+  worker:
+    rpc:
+      grpcPort: 7239
+      membershipPort: 6939
+      bindOnIP: "0.0.0.0"
+    metrics:
+      tags:
+        type: "worker"
+      prometheus:
+        timerType: "histogram"
+        listenAddress: "0.0.0.0:8003"
+
+clusterMetadata:
+  enableGlobalNamespace: false
+  failoverVersionIncrement: 10
+  masterClusterName: "active"
+  currentClusterName: "active"
+  clusterInformation:
+    active:
+      enabled: true
+      initialFailoverVersion: 1
+      rpcName: "frontend"
+      rpcAddress: "127.0.0.1:7233"
+
+dcRedirectionPolicy:
+  policy: "noop"
+  toDC: ""
+
+archival:
+  history:
+    state: "disabled"
+    enableRead: false
+    provider:
+      filestore:
+        fileMode: "0666"
+        dirMode: "0766"
+  visibility:
+    state: "disabled"
+    enableRead: false
+    provider:
+      filestore:
+        fileMode: "0666"
+        dirMode: "0766"
+
+namespaceDefaults:
+  archival:
+    history:
+      state: "disabled"
+      URI: ""
+    visibility:
+      state: "disabled"
+      URI: ""
+
+dynamicConfigClient:
+  filepath: {{ default .Env.DYNAMIC_CONFIG_FILE_PATH "/etc/temporal/config/dynamicconfig/development-sql.yaml" }}
+  pollInterval: "60s"
