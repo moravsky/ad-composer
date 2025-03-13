@@ -11,7 +11,7 @@ persistence:
       sql:
         pluginName: "postgres"
         databaseName: "{{ default .Env.POSTGRES_DB "temporaldb" }}"
-        user: "{{ default .Env.POSTGRES_USER "tofu_user" }}"
+        user: "{{ default .Env.POSTGRES_USER "ad_user" }}"
         password: "{{ default .Env.POSTGRES_PWD "your_secure_password" }}"
         host: "{{ default .Env.POSTGRES_SEEDS "db" }}"
         port: {{ default .Env.DB_PORT "5432" }}
@@ -22,7 +22,7 @@ persistence:
       sql:
         pluginName: "postgres"
         databaseName: "{{ default .Env.POSTGRES_DB "temporaldb" }}"
-        user: "{{ default .Env.POSTGRES_USER "tofu_user" }}"
+        user: "{{ default .Env.POSTGRES_USER "ad_user" }}"
         password: "{{ default .Env.POSTGRES_PWD "your_secure_password" }}"
         host: "{{ default .Env.POSTGRES_SEEDS "db" }}"
         port: {{ default .Env.DB_PORT "5432" }}

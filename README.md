@@ -124,21 +124,21 @@ The database is automatically initialized with Docker. For local development:
 
 1. Create PostgreSQL database:
 ```bash
-createdb tofudb
+createdb addb
 ```
 
 2. Run initialization scripts:
 ```bash
-psql -d tofudb -f db/create-db.sql
+psql -d addb -f db/create-db.sql
 ```
 
 ## Environment Variables
 
 ```
 # Database Configuration
-DB_USER=tofu_user
+DB_USER=ad_user
 DB_HOST=db
-DB_DATABASE=tofudb
+DB_DATABASE=addb
 DB_PASSWORD=your_secure_password
 DB_PORT=5432
 

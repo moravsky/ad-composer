@@ -3,11 +3,11 @@
 
 # Connect to the database and verify connectivity
 echo "Testing database connection..."
-psql -U tofu_user -d tofudb -c "SELECT 'Connection successful';"
+psql -U ad_user -d addb -c "SELECT 'Connection successful';"
 
 # Manually insert a test record to verify permissions
 echo "Inserting test record..."
-psql -U tofu_user -d tofudb -c "INSERT INTO company_info (company_name) VALUES ('Test Company') RETURNING id;"
+psql -U ad_user -d addb -c "INSERT INTO company_info (company_name) VALUES ('Test Company') RETURNING id;"
 
 # Check if the import_data.py script can be executed
 echo "Testing Python script..."

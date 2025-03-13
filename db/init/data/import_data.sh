@@ -10,8 +10,8 @@ echo "Using Python script at: /docker-entrypoint-initdb.d/data/import_data.py"
 python3 /docker-entrypoint-initdb.d/data/import_data.py \
   --host localhost \
   --port 5432 \
-  --dbname tofudb \
-  --user tofu_user \
+  --dbname addb \
+  --user ad_user \
   --password your_secure_password \
   --company_file /docker-entrypoint-initdb.d/data/company_info.json \
   --target_file /docker-entrypoint-initdb.d/data/target_info.json \

@@ -148,7 +148,7 @@ function loadExternalResources(containerElement) {
 
 async function fetchTargets() {
     try {
-        const response = await fetch('http://localhost:8000/api/account-names');
+        const response = await fetch('/api/account-names');
         const targets = await response.json();
         const targetsDropdown = document.getElementById('targetsDropdown');
 
@@ -189,7 +189,7 @@ function customizeSelectedTarget() {
         texts: selectedTexts
     };
 
-    fetch('http://localhost:8000/api/personalize', {
+    fetch('/api/personalize', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

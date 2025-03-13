@@ -6,7 +6,7 @@ docker-entrypoint.sh "$@" &
 PG_PID=$!
 
 # Wait for PostgreSQL to become ready
-until pg_isready -U tofu_user -d tofudb; do
+until pg_isready -U ad_user -d addb; do
   echo "Waiting for PostgreSQL to start..."
   sleep 2
 done
