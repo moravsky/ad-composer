@@ -25,19 +25,41 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      temporal:
+        condition: service_healthy
     env_file:
       - web/.env
     environment:
       DB_HOST: db
       TEMPORAL_HOST: temporal:7233
+    volumes:
+      - ./workflow:/app/workflow
     ports:
       - "8001:8000"
     command: python manage.py runserver 0.0.0.0:8000
+
+  # Temporal worker
+  worker:
+    build:
+      context: ./workflow
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+    env_file:
+      - workflow/.env
+    volumes:
+      - ./workflow:/app
 
   # Temporal services
   temporal:
     container_name: temporal
     image: temporalio/auto-setup:1.22.4
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       - DB=postgresql
       - DB_PORT=5432
@@ -48,7 +70,7 @@ services:
     ports:
       - 7233:7233
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7233/health"]
+      test: ["CMD-SHELL", "ps aux | grep -v grep | grep -q temporal-server || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -1,0 +1,22 @@
+# Main Workflow Configuration (AdContentWorkflow)
+
+# Task queue
+task_queue: "ad-composer-task-queue"
+
+# Worker concurrency settings
+max_concurrent_activities: 10
+max_concurrent_workflows: 5
+
+# Timeout settings (in seconds)
+timeouts:
+  workflow_execution: 3600  # 60 minutes
+
+# Retry policies
+retry_policy:
+  initial_interval: 1  # 1 second
+  backoff_coefficient: 2.0
+  maximum_interval: 60  # 1 minute
+  maximum_attempts: 3
+  non_retryable_error_types:
+    - "ValueError"
+    - "KeyError"

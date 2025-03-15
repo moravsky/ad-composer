@@ -1,0 +1,21 @@
+# Target Workflow Configuration (TargetWorkflow)
+
+# Timeout settings (in seconds)
+timeouts:
+  activity: 300  # 5 minutes
+
+# Retry policies
+retry_policy:
+  initial_interval: 1  # 1 second
+  backoff_coefficient: 2.0
+  maximum_interval: 60  # 1 minute
+  maximum_attempts: 3
+  non_retryable_error_types:
+    - "ValueError"
+    - "KeyError"
+
+# OpenAI settings
+openai:
+  model: "gpt-3.5-turbo"
+  temperature: 0.7
+  max_tokens: 1000

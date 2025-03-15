@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -16,9 +17,18 @@ from rest_framework.response import Response
 from urllib.parse import urljoin, urlparse
 import re
 import requests
+import time
 from .models import Account, CompanyInfo
-from .serializers import PersonalizationRequestSerializer, PersonalizationResponseSerializer
+from .serializers import (
+    PersonalizationRequestSerializer,
+    PersonalizationResponseSerializer,
+    BatchPersonalizationRequestSerializer
+)
 import openai
+from workflow.ad_content_workflow import PersonalizationJob, PersonalizationTarget
+
+# Import Temporal client
+from temporalio.client import Client
 
 logger = logging.getLogger(__name__)
 
@@ -237,8 +247,8 @@ def get_contextual_information(url):
         
         # Create retrieval chain
         qa_chain = RetrievalQA.from_chain_type(
-            ChatOpenAI(temperature=0), 
-            chain_type="stuff", 
+            ChatOpenAI(temperature=0),
+            chain_type="stuff",
             retriever=vectorstore.as_retriever()
         )
         
@@ -256,3 +266,81 @@ def get_contextual_information(url):
         logger.error(f"Error retrieving contextual information: {e}")
         print(f"Error: {e}")
         return ""
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@csrf_exempt
+def start_batch_personalization(request):
+    """
+    POST endpoint to start a batch personalization workflow using Temporal.
+    Takes a list of personalization jobs in the request body.
+    Each job contains company_info_id, target_account_id, and personalization_target.
+    
+    Returns the workflow ID which can be used to check status in Temporal UI.
+    """
+    # Validate request data using serializer
+    serializer = BatchPersonalizationRequestSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Get validated data
+    jobs = serializer.validated_data['jobs']
+    
+    try:
+        # Use sync_to_async to run the async code in a synchronous view
+        import asyncio
+        
+        async def start_workflow():
+            # Connect to Temporal server
+            client = await Client.connect("temporal:7233")
+            logger.info(f"Connected to Temporal server: {client.identity}")
+            
+            # Convert serialized jobs to PersonalizationJob objects
+            personalization_jobs = []
+            for job in jobs:
+                # Create PersonalizationTarget object
+                target = PersonalizationTarget(
+                    type=job['personalization_target']['type'],
+                    text=job['personalization_target']['text']
+                )
+                
+                # Create PersonalizationJob object
+                personalization_job = PersonalizationJob(
+                    company_info_id=job['company_info_id'],
+                    target_account_id=job['target_account_id'],
+                    personalization_target=target
+                )
+                
+                personalization_jobs.append(personalization_job)
+            
+            # Start the workflow
+            workflow_id = f"ad-content-workflow-{int(time.time())}"
+            handle = await client.start_workflow(
+                "AdContentWorkflow",       # Workflow type name
+                personalization_jobs,      # Workflow arguments as PersonalizationJob objects
+                id=workflow_id,            # Workflow ID
+                task_queue="ad-composer-task-queue"  # Task queue
+            )
+            
+            logger.info(f"Started workflow with ID: {workflow_id}")
+            return workflow_id
+        
+        # Run the async function in the event loop
+        workflow_id = asyncio.run(start_workflow())
+        
+        # Return the workflow ID
+        return Response({
+            "workflow_id": workflow_id,
+            "status": "started",
+            "message": f"Batch personalization workflow started with {len(jobs)} jobs"
+        })
+    
+    except Exception as e:
+        logger.error(f"Error starting batch personalization workflow: {e}")
+        return Response({
+            "error": "Failed to start batch personalization workflow",
+            "details": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
