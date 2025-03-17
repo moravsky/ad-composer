@@ -51,7 +51,7 @@ services:
     env_file:
       - workflow/.env
     volumes:
-      - ./workflow:/app
+      - ./workflow:/app/workflow
 
   # Temporal services
   temporal:
