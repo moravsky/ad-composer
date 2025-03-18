@@ -95,6 +95,16 @@ services:
     image: temporalio/ui:2.21.3
     ports:
       - 8080:8080
+      
+  # Notification service
+  notification:
+    build:
+      context: ./notification
+      dockerfile: Dockerfile
+    env_file:
+      - notification/.env
+    ports:
+      - "8765:8765"
 
 volumes:
   postgres_data:

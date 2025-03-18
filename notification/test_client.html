@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Service Test Client</title>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .row {
+            display: flex;
+            gap: 20px;
+        }
+        .col {
+            flex: 1;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, button {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #notifications {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .notification {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+        }
+        .status {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Notification Service Test Client</h1>
+    
+    <div class="container">
+        <div class="card">
+            <h2>Connection Status</h2>
+            <div id="connection-status" class="status">Disconnected</div>
+            <div class="form-group">
+                <button id="connect-btn">Connect</button>
+                <button id="disconnect-btn" disabled>Disconnect</button>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <h2>Subscribe to Workflow</h2>
+                    <div class="form-group">
+                        <label for="workflow-id">Workflow ID:</label>
+                        <input type="text" id="workflow-id" placeholder="Enter workflow ID">
+                    </div>
+                    <div class="form-group">
+                        <button id="subscribe-btn" disabled>Subscribe</button>
+                        <button id="unsubscribe-btn" disabled>Unsubscribe</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col">
+                <div class="card">
+                    <h2>Send Notification</h2>
+                    <div class="form-group">
+                        <label for="send-workflow-id">Workflow ID:</label>
+                        <input type="text" id="send-workflow-id" placeholder="Enter workflow ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="status-select">Status:</label>
+                        <select id="status-select">
+                            <option value="started">Started</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="details-input">Details:</label>
+                        <textarea id="details-input" rows="4" placeholder="Enter additional details"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <button id="send-notification-btn">Send Notification</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Notifications</h2>
+            <div id="notifications"></div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM elements
+        const connectBtn = document.getElementById('connect-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
+        const subscribeBtn = document.getElementById('subscribe-btn');
+        const unsubscribeBtn = document.getElementById('unsubscribe-btn');
+        const workflowIdInput = document.getElementById('workflow-id');
+        const connectionStatus = document.getElementById('connection-status');
+        const notificationsContainer = document.getElementById('notifications');
+        
+        // Socket.IO client
+        let socket = null;
+        
+        // Add notification to the container
+        function addNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <strong>${type.toUpperCase()}:</strong>
+                <pre>${JSON.stringify(message, null, 2)}</pre>
+                <div class="status">${new Date().toLocaleTimeString()}</div>
+            `;
+            notificationsContainer.prepend(notification);
+        }
+        
+        // Connect to the notification service
+        connectBtn.addEventListener('click', () => {
+            // Create Socket.IO client
+            socket = io('http://localhost:8765');
+            
+            // Connection events
+            socket.on('connect', () => {
+                connectionStatus.textContent = 'Connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                subscribeBtn.disabled = false;
+                unsubscribeBtn.disabled = false;
+                addNotification('Connected to notification service', 'success');
+            });
+            
+            socket.on('disconnect', () => {
+                connectionStatus.textContent = 'Disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                subscribeBtn.disabled = true;
+                unsubscribeBtn.disabled = true;
+                addNotification('Disconnected from notification service', 'warning');
+            });
+            
+            socket.on('connect_error', (error) => {
+                connectionStatus.textContent = `Connection Error: ${error.message}`;
+                addNotification(`Connection error: ${error.message}`, 'error');
+            });
+            
+            // Notification service events
+            socket.on('hello', (data) => {
+                addNotification(data, 'welcome');
+            });
+            
+            socket.on('error', (data) => {
+                addNotification(data, 'error');
+            });
+            
+            socket.on('subscribed', (data) => {
+                addNotification(data, 'subscribed');
+            });
+            
+            socket.on('unsubscribed', (data) => {
+                addNotification(data, 'unsubscribed');
+            });
+            
+            socket.on('workflow_notification', (data) => {
+                addNotification(data, 'notification');
+            });
+        });
+        
+        // Disconnect from the notification service
+        disconnectBtn.addEventListener('click', () => {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+        });
+        
+        // Subscribe to a workflow
+        subscribeBtn.addEventListener('click', () => {
+            const workflowId = workflowIdInput.value.trim();
+            if (!workflowId) {
+                alert('Please enter a workflow ID');
+                return;
+            }
+            
+            if (socket) {
+                socket.emit('subscribe_workflow', { workflow_id: workflowId });
+            }
+        });
+        
+        // Unsubscribe from a workflow
+        unsubscribeBtn.addEventListener('click', () => {
+            const workflowId = workflowIdInput.value.trim();
+            if (!workflowId) {
+                alert('Please enter a workflow ID');
+                return;
+            }
+            
+            if (socket) {
+                socket.emit('unsubscribe_workflow', { workflow_id: workflowId });
+            }
+        });
+        
+        // Send notification to a workflow
+        const sendNotificationBtn = document.getElementById('send-notification-btn');
+        const sendWorkflowIdInput = document.getElementById('send-workflow-id');
+        const statusSelect = document.getElementById('status-select');
+        const detailsInput = document.getElementById('details-input');
+        
+        sendNotificationBtn.addEventListener('click', async () => {
+            const workflowId = sendWorkflowIdInput.value.trim();
+            if (!workflowId) {
+                alert('Please enter a workflow ID');
+                return;
+            }
+            
+            const status = statusSelect.value;
+            const details = detailsInput.value.trim();
+            
+            // Prepare notification data
+            const data = {
+                workflow_id: workflowId,
+                status: status
+            };
+            
+            // Add details if provided
+            if (details) {
+                data.details = details;
+            }
+            
+            try {
+                // Send the notification
+                const response = await fetch('/send-workflow-notification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    console.log('Notification sent successfully:', {
+                        data: data,
+                        result: result
+                    });
+                } else {
+                    console.error('Failed to send notification:', {
+                        data: data,
+                        result: result
+                    });
+                }
+            } catch (error) {
+                console.error('Error sending notification:', error.message);
+            }
+        });
+    </script>
+</body>
+</html>
