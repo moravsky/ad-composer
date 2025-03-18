@@ -183,10 +183,13 @@ def clean_database(conn):
     
     with conn.cursor() as cur:
         # Delete data in reverse order of dependencies
-        cur.execute("DELETE FROM healthcare_subverticals")
+        # First delete child tables, then parent tables
+        cur.execute("DELETE FROM personalized_content")
+        cur.execute("DELETE FROM account_industries")
         cur.execute("DELETE FROM accounts")
         cur.execute("DELETE FROM industries")
         cur.execute("DELETE FROM personas")
+        cur.execute("DELETE FROM healthcare_subverticals")
         cur.execute("DELETE FROM company_info")
     
     conn.commit()

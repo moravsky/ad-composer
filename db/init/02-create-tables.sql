@@ -1,10 +1,12 @@
--- Drop tables if they exist
-DROP TABLE IF EXISTS company_info CASCADE;
-DROP TABLE IF EXISTS target_personas CASCADE;
-DROP TABLE IF EXISTS target_accounts CASCADE;
-DROP TABLE IF EXISTS target_industries CASCADE;
-DROP TABLE IF EXISTS healthcare_subverticals CASCADE;
+-- Drop tables if they exist (order matters for foreign key constraints)
+-- Drop child tables first, then parent tables
 DROP TABLE IF EXISTS personalized_content CASCADE;
+DROP TABLE IF EXISTS account_industries CASCADE;
+DROP TABLE IF EXISTS accounts CASCADE;
+DROP TABLE IF EXISTS company_info CASCADE;
+DROP TABLE IF EXISTS industries CASCADE;
+DROP TABLE IF EXISTS personas CASCADE;
+DROP TABLE IF EXISTS healthcare_subverticals CASCADE;
 
 -- Create company_info table
 CREATE TABLE IF NOT EXISTS company_info (
@@ -51,8 +53,8 @@ CREATE TABLE IF NOT EXISTS accounts (
 
 -- Create account_industries junction table (many-to-many)
 CREATE TABLE IF NOT EXISTS account_industries (
-    account_id INTEGER REFERENCES accounts(id),
-    industry_id INTEGER REFERENCES industries(id),
+    account_id INTEGER REFERENCES accounts(id) ON DELETE CASCADE,
+    industry_id INTEGER REFERENCES industries(id) ON DELETE CASCADE,
     PRIMARY KEY (account_id, industry_id)
 );
 
@@ -69,8 +71,8 @@ CREATE TABLE IF NOT EXISTS healthcare_subverticals (
 -- Create personalized_content table for storing workflow results
 CREATE TABLE IF NOT EXISTS personalized_content (
     id SERIAL PRIMARY KEY,
-    company_info_id INTEGER NOT NULL REFERENCES company_info(id),
-    target_account_id INTEGER NOT NULL REFERENCES accounts(id),
+    company_info_id INTEGER NOT NULL REFERENCES company_info(id) ON DELETE CASCADE,
+    target_account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
     original_text TEXT NOT NULL,
     personalized_text TEXT NOT NULL,
     text_type VARCHAR(50) NOT NULL,
